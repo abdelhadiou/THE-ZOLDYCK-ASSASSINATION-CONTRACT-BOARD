@@ -1,0 +1,228 @@
+═══════════════════════════════════════════════════════════════════
+      SKILL PROGRESSION LOG — ZOLDYCK CONTRACT BOARD
+      Operative: Zoldyck Operative | Seed RNG: 42
+═══════════════════════════════════════════════════════════════════
+
+This log tracks every skill milestone achieved during the 200-day
+campaign, the contracts that triggered each unlock, and which new
+contracts became accessible as a result.
+
+─────────────────────────────────────────────────────────────────
+[Day 001] ◆ CAMPAIGN START — Kukuroo Mountain
+─────────────────────────────────────────────────────────────────
+
+  Starting Skills:
+    combat       █░░░░░░░░░  1/10
+    stealth      █░░░░░░░░░  1/10
+    disguise     ░░░░░░░░░░  0/10
+    nen          ░░░░░░░░░░  0/10
+
+  Contracts accessible at start: 13
+    • [1★] The Merchant of Yorknew (Yorknew City) — 800g
+    • [1★] The Smuggler Lord (Masadora) — 900g
+    • [1★] The Dock Foreman (Dolle Harbor) — 700g
+    • [1★] The Corrupt Port Official (Dolle Harbor) — 850g
+    • [1★] The Mountain Bandit Chief (Kukuroo Mountain) — 950g
+    • [1★] The Fake Hunter (Zaban City) — 600g
+    • [1★] The Cowardly Noble (Yorknew City) — 500g
+    • [1★] The Lingon Weapons Smuggler (Lingon Airport) — 800g
+    • [1★] The Masadora Potion Dealer (Masadora) — 750g
+    • [1★] The Dock Thief Ring Boss (Dolle Harbor) — 900g
+    • [1★] The Whale Island Harbormaster (Whale Island) — 650g
+    • [1★] The Masadora Mercenary (Masadora) — 850g
+    • [1★] The Defected Bodyguard (Zaban City) — 950g
+
+─────────────────────────────────────────────────────────────────
+[Day 003] ✅ COMPLETED: "The Mountain Bandit Chief" in Kukuroo Mountain
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 combat
+
+  Updated Skill Levels:
+    combat       ██░░░░░░░░  2/10  [+1]
+    stealth      █░░░░░░░░░  1/10
+    disguise     ░░░░░░░░░░  0/10
+    nen          ░░░░░░░░░░  0/10
+
+  Newly Unlocked Contracts (+2):
+    • [2★] The Mafia Lieutenant
+         City: Yorknew City  |  Gold: 2800  |  Req: combat≥2, stealth≥1
+    • [2★] The Treasure Hunter Rival ⚠️ TRAP
+         City: Masadora  |  Gold: 2200  |  Req: combat≥2
+
+─────────────────────────────────────────────────────────────────
+[Day 006] ✅ COMPLETED: "The Lingon Weapons Smuggler" in Lingon Airport
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 stealth
+
+  Updated Skill Levels:
+    combat       ██░░░░░░░░  2/10
+    stealth      ██░░░░░░░░  2/10  [+1]
+    disguise     ░░░░░░░░░░  0/10
+    nen          ░░░░░░░░░░  0/10
+
+  Newly Unlocked Contracts (+7):
+    • [1★] The Arms Dealer
+         City: Lingon Airport  |  Gold: 1100  |  Req: stealth≥2
+    • [2★] The NGL Warlord
+         City: NGL  |  Gold: 4000  |  Req: combat≥2, stealth≥2
+    • [2★] The Island Governor ⚠️ TRAP
+         City: Whale Island  |  Gold: 3200  |  Req: stealth≥2, combat≥2
+    • [2★] The Poacher King ⚡complication
+         City: Whale Island  |  Gold: 3100  |  Req: stealth≥2, combat≥1
+    • [2★] The Assassin Copycat ⚡complication
+         City: Zaban City  |  Gold: 3300  |  Req: stealth≥2, combat≥2
+    • [1★] The NGL Tech Smuggler
+         City: NGL  |  Gold: 1100  |  Req: stealth≥2
+    • [2★] The Dolle Harbor Kingpin
+         City: Dolle Harbor  |  Gold: 3600  |  Req: combat≥2, stealth≥2
+
+─────────────────────────────────────────────────────────────────
+[Day 009] ✅ COMPLETED: "The Merchant of Yorknew" in Yorknew City
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 stealth
+
+  Updated Skill Levels:
+    combat       ██░░░░░░░░  2/10
+    stealth      ███░░░░░░░  3/10  [+1]
+    disguise     ░░░░░░░░░░  0/10
+    nen          ░░░░░░░░░░  0/10
+
+  No new contracts unlocked at this skill level.
+
+─────────────────────────────────────────────────────────────────
+[Day 013] ✅ COMPLETED: "The Corrupt Port Official" in Dolle Harbor
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 disguise
+
+  Updated Skill Levels:
+    combat       ██░░░░░░░░  2/10
+    stealth      ███░░░░░░░  3/10
+    disguise     █░░░░░░░░░  1/10  [+1]
+    nen          ░░░░░░░░░░  0/10
+
+  Newly Unlocked Contracts (+6):
+    • [1★] The Corrupt Senator ⚡complication
+         City: Yorknew City  |  Gold: 1200  |  Req: disguise≥1, combat≥1
+    • [1★] The Casino Boss ⚠️ TRAP
+         City: Dolle Harbor  |  Gold: 1500  |  Req: disguise≥1, stealth≥1
+    • [1★] The Zaban City Councilor
+         City: Zaban City  |  Gold: 1000  |  Req: disguise≥1
+    • [1★] The Rogue Scientist ⚡complication
+         City: NGL  |  Gold: 1300  |  Req: stealth≥1, disguise≥1
+    • [1★] The Auction Fence
+         City: Yorknew City  |  Gold: 1050  |  Req: disguise≥1
+    • [1★] The Lingon Pilot
+         City: Lingon Airport  |  Gold: 600  |  Req: disguise≥1
+
+─────────────────────────────────────────────────────────────────
+[Day 018] ✅ COMPLETED: "The Defected Bodyguard" in Zaban City
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 stealth
+
+  Updated Skill Levels:
+    combat       ██░░░░░░░░  2/10
+    stealth      ████░░░░░░  4/10  [+1]
+    disguise     █░░░░░░░░░  1/10
+    nen          ░░░░░░░░░░  0/10
+
+  No new contracts unlocked at this skill level.
+
+─────────────────────────────────────────────────────────────────
+[Day 023] ✅ COMPLETED: "The Mafia Lieutenant" in Yorknew City
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 combat
+
+  Updated Skill Levels:
+    combat       ███░░░░░░░  3/10  [+1]
+    stealth      ████░░░░░░  4/10
+    disguise     █░░░░░░░░░  1/10
+    nen          ░░░░░░░░░░  0/10
+
+  No new contracts unlocked at this skill level.
+
+─────────────────────────────────────────────────────────────────
+[Day 030] ✅ COMPLETED: "The Dolle Harbor Kingpin" in Dolle Harbor
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +2 combat
+
+  Updated Skill Levels:
+    combat       █████░░░░░  5/10  [+2]
+    stealth      ████░░░░░░  4/10
+    disguise     █░░░░░░░░░  1/10
+    nen          ░░░░░░░░░░  0/10
+
+  No new contracts unlocked at this skill level.
+
+─────────────────────────────────────────────────────────────────
+[Day 036] ✅ COMPLETED: "The Poacher King" in Whale Island
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 stealth, +1 combat
+
+  Updated Skill Levels:
+    combat       ██████░░░░  6/10  [+1]
+    stealth      █████░░░░░  5/10  [+1]
+    disguise     █░░░░░░░░░  1/10
+    nen          ░░░░░░░░░░  0/10
+
+  No new contracts unlocked at this skill level.
+
+─────────────────────────────────────────────────────────────────
+[Day 049] ✅ COMPLETED: "The NGL Warlord" in NGL
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +2 combat
+
+  Updated Skill Levels:
+    combat       ████████░░  8/10  [+2]
+    stealth      █████░░░░░  5/10
+    disguise     █░░░░░░░░░  1/10
+    nen          ░░░░░░░░░░  0/10
+
+  No new contracts unlocked at this skill level.
+
+─────────────────────────────────────────────────────────────────
+[Day 061] ✅ COMPLETED: "The Assassin Copycat" in Zaban City
+─────────────────────────────────────────────────────────────────
+
+  Skills Gained : +1 stealth, +1 combat
+
+  Updated Skill Levels:
+    combat       █████████░  9/10  [+1]
+    stealth      ██████░░░░  6/10  [+1]
+    disguise     █░░░░░░░░░  1/10
+    nen          ░░░░░░░░░░  0/10
+
+  No new contracts unlocked at this skill level.
+
+─────────────────────────────────────────────────────────────────
+[Day 061] 🏁 SIMULATION ENDED — Day 61 of 200
+─────────────────────────────────────────────────────────────────
+
+  FINAL SKILL LEVELS:
+    combat       █████████░  9/10
+    stealth      ██████░░░░  6/10
+    disguise     █░░░░░░░░░  1/10
+    nen          ░░░░░░░░░░  0/10
+
+  CAREER STATISTICS:
+    Contracts Completed : 10
+    Contracts Failed    : 0
+    Contracts Abandoned : 0  (7 traps detected and avoided)
+    Final Gold          : 21,150
+    Final Reputation    : 51
+    Total Contracts Accessible at End : 28
+
+  NEN NOTE:
+    Nen never progressed from 0. All Tier 3 contracts (10 total,
+    6500–15000 gold each) remain locked. A dedicated nen-seeding
+    contract would be required to access this tier in a future run.
+
+═══════════════════════════════════════════════════════════════════

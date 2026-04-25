@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zoldyck Contract Board — Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="board-wrapper">
+
+    <!-- ── Header ──────────────────────────────────────────────────────────── -->
+    <header class="board-header">
+      <div class="header-left">
+        <div class="zoldyck-emblem">⚔</div>
+        <div>
+          <h1>Zoldyck Contract Board</h1>
+          <p class="header-tagline">Challenge 03 — Optimization Engine</p>
+        </div>
+      </div>
+      <nav class="header-nav">
+        <button class="nav-btn active" data-tab="contracts">Contracts</button>
+        <button class="nav-btn" data-tab="timeline">Timeline</button>
+        <button class="nav-btn" data-tab="skills">Skills</button>
+        <button class="nav-btn" data-tab="strategy">Strategy</button>
+        <a href="map.html" class="nav-btn map-link" target="_blank">🗺 Map</a>
+      </nav>
+    </header>
+
+    <!-- ── Stats Bar ─────────────────────────────────────────────────────────── -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <span class="stat-icon">💰</span>
+        <div><div class="stat-value" id="stat-gold">0</div><div class="stat-label">Gold Earned</div></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🏆</span>
+        <div><div class="stat-value" id="stat-rep">10</div><div class="stat-label">Reputation</div></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">✅</span>
+        <div><div class="stat-value" id="stat-completed">0</div><div class="stat-label">Completed</div></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">❌</span>
+        <div><div class="stat-value" id="stat-failed">0</div><div class="stat-label">Failed</div></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">📅</span>
+        <div><div class="stat-value" id="stat-day">—</div><div class="stat-label">Final Day</div></div>
+      </div>
+      <div class="run-btn-wrap">
+        <button id="btn-run" class="run-btn">▶ Run Optimizer</button>
+        <div id="run-status" class="run-status"></div>
+      </div>
+    </div>
+
+    <!-- ── Tab Contents ───────────────────────────────────────────────────────── -->
+    <main class="tab-area">
+
+      <!-- Contracts Tab -->
+      <div class="tab-content active" id="tab-contracts">
+        <div class="contracts-toolbar">
+          <div class="filter-group">
+            <label>Tier:</label>
+            <select id="filter-tier">
+              <option value="all">All</option>
+              <option value="1">Tier 1</option>
+              <option value="2">Tier 2</option>
+              <option value="3">Tier 3</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Status:</label>
+            <select id="filter-status">
+              <option value="all">All</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+              <option value="abandoned">Abandoned</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>City:</label>
+            <select id="filter-city">
+              <option value="all">All Cities</option>
+              <option value="Yorknew City">Yorknew City</option>
+              <option value="Zaban City">Zaban City</option>
+              <option value="Dolle Harbor">Dolle Harbor</option>
+              <option value="Whale Island">Whale Island</option>
+              <option value="Lingon Airport">Lingon Airport</option>
+              <option value="NGL">NGL</option>
+              <option value="Masadora">Masadora</option>
+              <option value="Greed Island">Greed Island</option>
+              <option value="Kukuroo Mountain">Kukuroo Mountain</option>
+            </select>
+          </div>
+          <input class="search-box" id="contract-search" type="text" placeholder="Search contracts…" />
+        </div>
+        <div class="contracts-grid" id="contracts-grid">
+          <p class="loading-hint">Loading contracts…</p>
+        </div>
+      </div>
+
+      <!-- Timeline Tab -->
+      <div class="tab-content" id="tab-timeline">
+        <div class="timeline-header">
+          <h2>Day-by-Day Timeline</h2>
+          <p class="hint">Run the optimizer to populate this timeline.</p>
+        </div>
+        <div class="timeline-list" id="timeline-list">
+          <p class="empty-state">No timeline data yet. Click <strong>Run Optimizer</strong>.</p>
+        </div>
+      </div>
+
+      <!-- Skills Tab -->
+      <div class="tab-content" id="tab-skills">
+        <div class="skills-layout">
+          <div class="skills-chart-area">
+            <h2>Skill Progression</h2>
+            <canvas id="skills-chart" height="280"></canvas>
+          </div>
+          <div class="skills-log-area">
+            <h2>Progression Log</h2>
+            <div class="skill-log-list" id="skill-log-list">
+              <p class="empty-state">Run the optimizer to see skill progression.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy Tab -->
+      <div class="tab-content" id="tab-strategy">
+        <div class="strategy-content">
+          <h2>Strategy Document</h2>
+          <pre id="strategy-text" class="strategy-pre">Loading strategy document…</pre>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ── Data & State ──────────────────────────────────────────────────────────
+    let contracts = [];
+    let simState = null;
+    const STRATEGY_TEXT = `CONTRACT SELECTION ALGORITHM
+────────────────────────────────────────────────────────
+The engine uses a multi-factor greedy scoring heuristic.
+
+  score = goldPerDay + skillValuePerDay + urgencyBonus + repValue - trapPenalty
+
+goldPerDay = (gold × repMultiplier) / (travelDays + execDays + 1)
+skillValue  = Σ(skill_rewards) × 500 gold equivalent per point
+urgencyBonus = max(0, 50 - daysRemaining) × 10
+trapPenalty  = 500 (discourages trap contracts)
+
+Up to 5 contracts accepted per batch. Traps detected immediately
+after acceptance (before travel) and abandoned with -1 rep.
+
+ROUTE OPTIMIZATION
+────────────────────────────────────────────────────────
+Greedy nearest-effective-deadline ordering within each batch.
+  Step: pick contract with earliest (deadline - exec_days)
+        that is still reachable from current position.
+
+Dijkstra shortest paths over the weighted city graph.
+Same-city contracts chained at zero additional travel cost.
+
+SKILL PROGRESSION MODEL
+────────────────────────────────────────────────────────
+Skills: combat, stealth, disguise, nen (integer levels).
+Gains applied immediately on contract completion.
+Newly unlocked contracts flagged for next accept phase.
+
+Phase strategy:
+  Days 1–60   → Tier 1 farming (build disguise + nen from 0)
+  Days 60–130 → Tier 2 chains (push nen/stealth to 3)
+  Days 130–200 → Tier 3 high-value targets
+
+COMPLICATIONS & TRAPS
+────────────────────────────────────────────────────────
+Complications (20% chance): execution × 1.5 (ceiling).
+Expected exec = base × 1.10 → priced into scoring margin.
+
+Traps: always detected before travel via skill analyzer.
+Each abandon = -1 reputation (compound 10% gold penalty).
+Trap contracts penalized -500 in scoring to avoid selection.
+
+TRADEOFFS
+────────────────────────────────────────────────────────
+Gold vs Risk: complication contracts accepted when EV positive.
+Speed vs Skill: skill point worth ~500g prevents premature rushing.
+Urgency vs Batching: urgency bonus handled per-batch, not per-city.
+Reputation: never fail deadlines — skip marginal contracts entirely.`;
+
+    // ── Tab navigation ────────────────────────────────────────────────────────
+    document.querySelectorAll(".nav-btn[data-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach((t) => t.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    // ── Load contracts ────────────────────────────────────────────────────────
+    async function loadContracts() {
+      try {
+        const res = await fetch("contracts.json");
+        contracts = await res.json();
+        renderContracts();
+      } catch {
+        document.getElementById("contracts-grid").innerHTML =
+          '<p class="error">Could not load contracts.json</p>';
+      }
+    }
+
+    // ── Render contracts grid ─────────────────────────────────────────────────
+    function getContractStatus(contract) {
+      if (!simState) return "pending";
+      if (simState.completedContracts.find((c) => c.id === contract.id)) return "completed";
+      if (simState.failedContracts.find((c) => c.id === contract.id)) return "failed";
+      if (simState.abandonedContracts.find((c) => c.id === contract.id)) return "abandoned";
+      return "pending";
+    }
+
+    function renderContracts() {
+      const grid = document.getElementById("contracts-grid");
+      const tier = document.getElementById("filter-tier").value;
+      const status = document.getElementById("filter-status").value;
+      const city = document.getElementById("filter-city").value;
+      const search = document.getElementById("contract-search").value.toLowerCase();
+
+      const filtered = contracts.filter((c) => {
+        if (tier !== "all" && c.tier !== parseInt(tier)) return false;
+        if (city !== "all" && c.city !== city) return false;
+        if (status !== "all" && getContractStatus(c) !== status) return false;
+        if (search && !c.name.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<p class="empty-state">No contracts match your filters.</p>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map((c) => {
+        const st = getContractStatus(c);
+        const skills = Object.entries(c.required_skills)
+          .map(([s, v]) => `<span class="skill-tag">${s} ${v}</span>`)
+          .join("");
+        const rewards = Object.entries(c.skill_rewards)
+          .map(([s, v]) => `<span class="skill-reward-tag">+${v} ${s}</span>`)
+          .join("") || '<span class="skill-tag muted">none</span>';
+        const tierStars = "★".repeat(c.tier) + "☆".repeat(3 - c.tier);
+        const trapBadge = c.is_trap ? '<span class="badge trap">TRAP</span>' : "";
+        const compBadge = c.has_complication ? '<span class="badge complication">COMPLICATION</span>' : "";
+
+        return `
+          <div class="contract-card status-${st}">
+            <div class="card-top">
+              <div class="card-title">
+                <span class="contract-id">${c.id}</span>
+                <span class="contract-name">${c.name}</span>
+              </div>
+              <div class="card-badges">
+                ${trapBadge}${compBadge}
+                <span class="status-badge ${st}">${st.toUpperCase()}</span>
+              </div>
+            </div>
+            <div class="card-meta">
+              <span class="meta-item">📍 ${c.city}</span>
+              <span class="meta-item">Tier <span class="tier-stars tier${c.tier}">${tierStars}</span></span>
+              <span class="meta-item">⏱ ${c.execution_days}d exec</span>
+              <span class="meta-item">📅 Deadline: Day ${c.deadline_day}</span>
+            </div>
+            <div class="card-gold">
+              <span class="gold-amount">💰 ${c.gold.toLocaleString()} gold</span>
+              <span class="rep-reward">+${c.reputation_reward} rep</span>
+            </div>
+            <div class="card-skills">
+              <div class="skills-row"><span class="skills-label">Requires:</span>${skills || '<span class="skill-tag muted">none</span>'}</div>
+              <div class="skills-row"><span class="skills-label">Rewards:</span>${rewards}</div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    ["filter-tier", "filter-status", "filter-city", "contract-search"].forEach((id) =>
+      document.getElementById(id).addEventListener("input", renderContracts)
+    );
+
+    // ── Run Optimizer ─────────────────────────────────────────────────────────
+    document.getElementById("btn-run").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-run");
+      const status = document.getElementById("run-status");
+      btn.disabled = true;
+      btn.textContent = "⏳ Running…";
+      status.textContent = "Calling optimization engine…";
+
+      try {
+        // Inline simulation for browser (mirrors optimizer.js logic)
+        const mapRes = await fetch("map.json");
+        const mapData = await mapRes.json();
+        const profileRes = await fetch("profile.json");
+        const profileData = await profileRes.json();
+
+        simState = runBrowserSimulation(contracts, mapData, profileData);
+
+        // Update stats bar
+        document.getElementById("stat-gold").textContent = simState.gold.toLocaleString();
+        document.getElementById("stat-rep").textContent = simState.reputation;
+        document.getElementById("stat-completed").textContent = simState.completedContracts.length;
+        document.getElementById("stat-failed").textContent = simState.failedContracts.length;
+        document.getElementById("stat-day").textContent = simState.day;
+
+        renderContracts();
+        renderTimeline();
+        renderSkills();
+        status.textContent = `✅ Done! ${simState.completedContracts.length} contracts completed. Gold: ${simState.gold.toLocaleString()}`;
+        // Save to localStorage so map.html can load it without a server
+        try { localStorage.setItem('zoldyk_simState', JSON.stringify(simState)); } catch(e) {}
+        btn.textContent = "↺ Re-run";
+      } catch (err) {
+        status.textContent = "❌ Error: " + err.message;
+        console.error(err);
+        btn.textContent = "▶ Run Optimizer";
+      }
+      btn.disabled = false;
+    });
+
+    // ── Browser simulation (mirrors optimizer.js) ─────────────────────────────
+    function runBrowserSimulation(contracts, map, profile) {
+      function getCityId(name) {
+        return map.city_name_map[name] ?? name;
+      }
+      function getTravelTime(from, to) {
+        const f = from.includes(" ") ? getCityId(from) : from;
+        const t = to.includes(" ") ? getCityId(to) : to;
+        if (f === t) return 0;
+        return map.travel_times[f]?.[t] ?? 999;
+      }
+      function meetsSkills(skills, req) {
+        return Object.entries(req).every(([s, l]) => (skills[s] ?? 0) >= l);
+      }
+
+      let seed = 42;
+      const rng = () => {
+        seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+        return (seed >>> 0) / 0x100000000;
+      };
+
+      const state = {
+        day: profile.current_day,
+        city: getCityId(profile.starting_city),
+        gold: profile.gold,
+        reputation: profile.reputation,
+        skills: { ...profile.skills },
+        activeContracts: [],
+        completedContracts: [],
+        failedContracts: [],
+        abandonedContracts: [],
+        timeline: [],
+        skillLog: [],
+      };
+
+      const repMult = () =>
+        Math.pow(0.9, state.failedContracts.length + state.abandonedContracts.length);
+
+      const log = (msg) => state.timeline.push({ day: state.day, city: state.city, msg });
+
+      const allIds = () => [
+        ...state.completedContracts,
+        ...state.failedContracts,
+        ...state.abandonedContracts,
+        ...state.activeContracts,
+      ].map((c) => c.id);
+
+      function scoreC(c) {
+        const travel = getTravelTime(state.city, c.city);
+        const arrival = state.day + travel;
+        if (arrival >= c.deadline_day) return -Infinity;
+        const daysR = c.deadline_day - arrival;
+        if (travel + c.execution_days > daysR + c.execution_days) return -Infinity;
+        const gold = c.gold * repMult();
+        const gpd = gold / (travel + c.execution_days + 1);
+        const sv = Object.values(c.skill_rewards).reduce((a, b) => a + b, 0) * 500;
+        const urg = Math.max(0, 50 - daysR) * 10;
+        const rep = c.reputation_reward * 100;
+        const trap = c.is_trap ? 500 : 0;
+        return gpd + sv / (travel + c.execution_days + 1) + urg + rep - trap;
+      }
+
+      function acceptPhase() {
+        while (state.activeContracts.length < 5 && state.day < profile.total_days) {
+          const accessible = contracts.filter(
+            (c) => !allIds().includes(c.id) && meetsSkills(state.skills, c.required_skills)
+          );
+          if (!accessible.length) break;
+          const scored = accessible
+            .map((c) => ({ c, s: scoreC(c) }))
+            .filter((x) => x.s > -Infinity)
+            .sort((a, b) => b.s - a.s)
+            .slice(0, 5 - state.activeContracts.length);
+          if (!scored.length) break;
+          for (const { c } of scored) {
+            if (c.is_trap) {
+              log(`⚠️ TRAP DETECTED: "${c.name}". Abandoning. Rep -1.`);
+              state.abandonedContracts.push(c);
+              state.reputation = Math.max(0, state.reputation - 1);
+              continue;
+            }
+            state.activeContracts.push(c);
+            log(`📋 ACCEPTED: "${c.name}" → ${c.city} (Gold: ${c.gold}, Deadline: Day ${c.deadline_day})`);
+          }
+          if (!scored.length) break;
+        }
+      }
+
+      function executePhase() {
+        if (!state.activeContracts.length) return;
+        const remaining = [...state.activeContracts];
+        const route = [];
+        let city = state.city;
+        let day = state.day;
+
+        while (remaining.length) {
+          let best = null, bestScore = -Infinity;
+          for (const c of remaining) {
+            const travel = getTravelTime(city, c.city);
+            const arrival = day + travel;
+            if (arrival >= c.deadline_day) continue;
+            const eff = c.deadline_day - c.execution_days;
+            const s = 1000 - eff + (1 / (travel + 1)) * 10;
+            if (s > bestScore) { bestScore = s; best = c; }
+          }
+          if (!best) {
+            remaining.forEach(c => route.push({ c, feasible: false }));
+            break;
+          }
+          const travel = getTravelTime(city, best.city);
+          const arrival = day + travel;
+          route.push({ c: best, travel, arrivalDay: arrival, feasible: true });
+          day = arrival + best.execution_days;
+          city = getCityId(best.city);
+          remaining.splice(remaining.indexOf(best), 1);
+        }
+
+        for (const stop of route) {
+          const { c, travel, arrivalDay, feasible } = stop;
+          if (!feasible) {
+            log(`❌ FAILED (infeasible): "${c.name}"`);
+            state.failedContracts.push(c);
+            state.reputation = Math.max(0, state.reputation - 1);
+            continue;
+          }
+          if (travel > 0) log(`✈️ TRAVELING to ${c.city} (${travel} days)`);
+          state.day = arrivalDay;
+          state.city = getCityId(c.city);
+          if (state.day >= c.deadline_day) {
+            log(`❌ FAILED (deadline): "${c.name}"`);
+            state.failedContracts.push(c);
+            state.reputation = Math.max(0, state.reputation - 1);
+            continue;
+          }
+          const compl = c.has_complication && rng() < 0.2;
+          const execDays = compl ? Math.ceil(c.execution_days * 1.5) : c.execution_days;
+          if (compl) log(`⚡ COMPLICATION on "${c.name}"! +${execDays - c.execution_days} days.`);
+          state.day += execDays;
+          if (state.day > profile.total_days) {
+            log(`❌ FAILED (out of days): "${c.name}"`);
+            state.failedContracts.push(c);
+            state.reputation = Math.max(0, state.reputation - 1);
+            continue;
+          }
+          const gold = Math.floor(c.gold * repMult());
+          state.gold += gold;
+          state.reputation += c.reputation_reward;
+          state.completedContracts.push(c);
+          log(`✅ COMPLETED: "${c.name}" Day ${state.day}. +${gold}g (Total: ${state.gold}). Rep: ${state.reputation}`);
+          const gained = [];
+          for (const [skill, amt] of Object.entries(c.skill_rewards)) {
+            state.skills[skill] = (state.skills[skill] ?? 0) + amt;
+            gained.push(`${skill}→${state.skills[skill]}`);
+          }
+          if (gained.length) {
+            log(`🎯 SKILLS: ${gained.join(", ")}`);
+            state.skillLog.push({ day: state.day, contract: c.name, skills: { ...state.skills }, gained: c.skill_rewards });
+          }
+        }
+        state.activeContracts = [];
+      }
+
+      while (state.day < profile.total_days) {
+        const prev = state.completedContracts.length;
+        acceptPhase();
+        if (!state.activeContracts.length) break;
+        executePhase();
+        if (state.completedContracts.length === prev && !state.activeContracts.length) break;
+      }
+      log(`🏁 FINISHED Day ${state.day}. Gold: ${state.gold}. Rep: ${state.reputation}.`);
+      return state;
+    }
+
+    // ── Render Timeline ───────────────────────────────────────────────────────
+    function renderTimeline() {
+      if (!simState) return;
+      const list = document.getElementById("timeline-list");
+      list.innerHTML = simState.timeline.map((e) => {
+        let cls = "tl-entry";
+        if (e.msg.includes("✅")) cls += " tl-complete";
+        else if (e.msg.includes("❌")) cls += " tl-fail";
+        else if (e.msg.includes("⚠️")) cls += " tl-trap";
+        else if (e.msg.includes("✈️")) cls += " tl-travel";
+        else if (e.msg.includes("📋")) cls += " tl-accept";
+        else if (e.msg.includes("🎯")) cls += " tl-skill";
+        else if (e.msg.includes("⚡")) cls += " tl-compl";
+        return `<div class="${cls}"><span class="tl-day">Day ${String(e.day).padStart(3,"0")}</span><span class="tl-msg">${e.msg}</span></div>`;
+      }).join("");
+    }
+
+    // ── Render Skills ─────────────────────────────────────────────────────────
+    function renderSkills() {
+      if (!simState) return;
+
+      // Log list
+      const logList = document.getElementById("skill-log-list");
+      if (simState.skillLog.length === 0) {
+        logList.innerHTML = '<p class="empty-state">No skill gains recorded.</p>';
+      } else {
+        logList.innerHTML = simState.skillLog.map((e) => `
+          <div class="skill-log-entry">
+            <div class="sl-day">Day ${e.day}</div>
+            <div class="sl-contract">${e.contract}</div>
+            <div class="sl-gained">${Object.entries(e.gained).map(([s,v])=>`+${v} ${s}`).join(", ")}</div>
+            <div class="sl-totals">${Object.entries(e.skills).map(([s,v])=>`${s}:${v}`).join(" | ")}</div>
+          </div>`).join("");
+      }
+
+      // Simple bar chart via canvas
+      const canvas = document.getElementById("skills-chart");
+      const ctx = canvas.getContext("2d");
+      canvas.width = canvas.parentElement.clientWidth || 500;
+      const skills = simState.skills;
+      const names = Object.keys(skills);
+      const values = Object.values(skills);
+      const maxVal = Math.max(...values, 1);
+      const barW = (canvas.width - 60) / names.length - 16;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const colors = ["#d4af37", "#00cc66", "#4499ff", "#ff6644"];
+      names.forEach((name, i) => {
+        const x = 30 + i * (barW + 16);
+        const barH = (values[i] / maxVal) * (canvas.height - 60);
+        const y = canvas.height - 40 - barH;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fillRect(x, y, barW, barH);
+        ctx.fillStyle = "#d4af37";
+        ctx.font = "12px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(name, x + barW / 2, canvas.height - 10);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(values[i], x + barW / 2, y - 5);
+      });
+    }
+
+    // ── Strategy tab ──────────────────────────────────────────────────────────
+    document.getElementById("strategy-text").textContent = STRATEGY_TEXT;
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadContracts();
+  </script>
+</body>
+</html>

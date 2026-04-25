@@ -1,0 +1,116 @@
+{
+  "cities": [
+    { "id": "kukuroo", "name": "Kukuroo Mountain", "description": "Starting location. Home of the Zoldycks." },
+    { "id": "yorknew", "name": "Yorknew City", "description": "The world's largest city. Hub of commerce and crime." },
+    { "id": "zaban", "name": "Zaban City", "description": "Site of the Hunter Exam. Administrative center." },
+    { "id": "dolle", "name": "Dolle Harbor", "description": "Major port city. Gateway to Whale Island." },
+    { "id": "whale_island", "name": "Whale Island", "description": "Remote island. Accessible by sea from Dolle Harbor." },
+    { "id": "lingon", "name": "Lingon Airport", "description": "Major transit hub. Fastest way to cross regions." },
+    { "id": "ngl", "name": "NGL", "description": "No Good Language territory. Anti-technology zone." },
+    { "id": "masadora", "name": "Masadora", "description": "Magic city inside Greed Island. Portal access required." },
+    { "id": "greed_island", "name": "Greed Island", "description": "Game world. Requires Nen to enter." }
+  ],
+  "travel_times": {
+    "kukuroo": {
+      "yorknew": 2,
+      "zaban": 3,
+      "dolle": 4,
+      "whale_island": 6,
+      "lingon": 2,
+      "ngl": 7,
+      "masadora": 10,
+      "greed_island": 12
+    },
+    "yorknew": {
+      "kukuroo": 2,
+      "zaban": 2,
+      "dolle": 3,
+      "whale_island": 5,
+      "lingon": 1,
+      "ngl": 5,
+      "masadora": 9,
+      "greed_island": 11
+    },
+    "zaban": {
+      "kukuroo": 3,
+      "yorknew": 2,
+      "dolle": 3,
+      "whale_island": 6,
+      "lingon": 2,
+      "ngl": 6,
+      "masadora": 10,
+      "greed_island": 12
+    },
+    "dolle": {
+      "kukuroo": 4,
+      "yorknew": 3,
+      "zaban": 3,
+      "whale_island": 2,
+      "lingon": 3,
+      "ngl": 6,
+      "masadora": 11,
+      "greed_island": 13
+    },
+    "whale_island": {
+      "kukuroo": 6,
+      "yorknew": 5,
+      "zaban": 6,
+      "dolle": 2,
+      "lingon": 5,
+      "ngl": 8,
+      "masadora": 13,
+      "greed_island": 15
+    },
+    "lingon": {
+      "kukuroo": 2,
+      "yorknew": 1,
+      "zaban": 2,
+      "dolle": 3,
+      "whale_island": 5,
+      "ngl": 4,
+      "masadora": 8,
+      "greed_island": 10
+    },
+    "ngl": {
+      "kukuroo": 7,
+      "yorknew": 5,
+      "zaban": 6,
+      "dolle": 6,
+      "whale_island": 8,
+      "lingon": 4,
+      "masadora": 8,
+      "greed_island": 10
+    },
+    "masadora": {
+      "kukuroo": 10,
+      "yorknew": 9,
+      "zaban": 10,
+      "dolle": 11,
+      "whale_island": 13,
+      "lingon": 8,
+      "ngl": 8,
+      "greed_island": 2
+    },
+    "greed_island": {
+      "kukuroo": 12,
+      "yorknew": 11,
+      "zaban": 12,
+      "dolle": 13,
+      "whale_island": 15,
+      "lingon": 10,
+      "ngl": 10,
+      "masadora": 2
+    }
+  },
+  "city_name_map": {
+    "Kukuroo Mountain": "kukuroo",
+    "Yorknew City": "yorknew",
+    "Zaban City": "zaban",
+    "Dolle Harbor": "dolle",
+    "Whale Island": "whale_island",
+    "Lingon Airport": "lingon",
+    "NGL": "ngl",
+    "Masadora": "masadora",
+    "Greed Island": "greed_island"
+  }
+}

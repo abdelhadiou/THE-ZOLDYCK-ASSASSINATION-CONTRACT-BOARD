@@ -1,0 +1,186 @@
+═══════════════════════════════════════════════════════════════════
+         STRATEGY DOCUMENT — ZOLDYCK OPTIMIZATION ENGINE
+         Operative: Zoldyck Operative | 200-Day Campaign
+═══════════════════════════════════════════════════════════════════
+
+
+1. CONTRACT SELECTION ALGORITHM
+───────────────────────────────────────────────────────────────────
+
+Contracts are selected using a multi-factor greedy scoring heuristic
+evaluated at each decision point (after each execution batch).
+
+Core Scoring Formula:
+
+  score = goldPerDay
+        + (skillValuePerDay)        → each skill point ≈ 500 gold equivalent
+        + urgencyBonus              → reward for deadline pressure (≤50 days left)
+        + reputationValue           → reputation_reward × 100
+        − trapPenalty               → −500 applied to known traps
+
+Where:
+  goldPerDay        = (contract.gold × reputationMultiplier) / (travelDays + execDays + 1)
+  skillValuePerDay  = sum(skill_rewards) × 500 / (travelDays + execDays + 1)
+  urgencyBonus      = max(0, 50 − daysRemaining) × 10
+  reputationMultiplier = 1 + (reputation − 10) × 0.01   [starts at ×1.0]
+
+Contracts are filtered before scoring by:
+  (a) Skill gate check — operative must meet ALL required_skills thresholds.
+  (b) Deadline feasibility — arrivalDay (currentDay + travelTime) must be
+      strictly less than contract.deadline_day.
+  (c) Already-completed exclusion — completed IDs are removed from the pool.
+
+Up to 5 contracts may be accepted per batch (max_active_contracts).
+The top-5 scoring contracts are accepted, then routed together as a group
+before the next selection phase begins.
+
+
+2. ROUTE OPTIMIZATION APPROACH
+───────────────────────────────────────────────────────────────────
+
+Travel between cities is modeled as a weighted directed graph using
+the travel_times matrix in map.json. Shortest paths are computed via
+Dijkstra's algorithm, allowing multi-hop routing (e.g., Whale Island
+is best reached via Dolle Harbor as an intermediate hub).
+
+Once a batch of ≤5 contracts is accepted, the route ordering problem
+is treated as a greedy Travelling Salesman variant:
+
+  1. From the current city, score each remaining unvisited contract stop
+     by: urgency (deadline proximity) + travel cost.
+  2. Greedily select the next stop with the best urgency-to-travel ratio.
+  3. Repeat until all stops in the batch are ordered.
+
+This is not globally optimal (true TSP is NP-hard), but the greedy
+nearest-deadline heuristic performs well because:
+  - Contract deadlines act as natural time-windows that prune bad orderings.
+  - The maximum active batch size (5 contracts) keeps the search space small.
+  - Geographic clustering (e.g., Yorknew → Dolle → Whale Island) emerges
+    naturally from deadline pressure.
+
+Key routing observation: Lingon Airport (travel time 1–3 to most cities)
+serves as the central transit hub. Contracts near Kukuroo and Lingon are
+prioritized early to establish a base of gold and skill before venturing
+to distant nodes like NGL (travel cost 4–8) or Greed Island (10–15).
+
+
+3. SKILL PROGRESSION MODEL
+───────────────────────────────────────────────────────────────────
+
+Skills are the primary gate mechanism in the game. The four skills —
+combat, stealth, disguise, nen — start at {1, 1, 0, 0} respectively.
+
+Skill progression is fully deterministic: completing a contract always
+grants its full skill_rewards with no randomness. This makes skill
+acquisition a planning variable, not a stochastic one.
+
+The progression model uses a "skill-as-currency" valuation: each skill
+point is treated as equivalent to 500 gold when scoring contracts. This
+means a contract offering +2 combat (≈1000 gold value) at 800 raw gold
+is scored higher than a 1200 gold contract with no skill reward, provided
+travel costs and deadlines are comparable.
+
+Tiered unlock thresholds drive the overall progression arc:
+  Tier 1 contracts  → accessible from the start (combat ≥1, stealth ≥1).
+  Tier 2 contracts  → require combat ≥2 and/or stealth ≥2; unlocked by Day 3.
+  Tier 3 contracts  → require nen ≥2 and combat/stealth ≥3; NOT yet reached.
+
+The engine prioritizes contracts that unlock the NEXT tier rather than
+maximizing raw gold on the current tier. For example, "The Lingon Weapons
+Smuggler" (+1 stealth, reaching stealth=2) was selected early despite
+moderate gold (800) because it unlocked 7 additional Tier-2 contracts,
+including high-value targets like "The NGL Warlord" (4000 gold).
+
+Nen remains at 0 throughout the simulated run. This is the primary
+bottleneck preventing access to Tier 3 contracts (all require nen ≥2),
+which represent the highest gold density in the game (6500–15000 gold).
+
+
+4. COMPLICATIONS AND TRAP DETECTION
+───────────────────────────────────────────────────────────────────
+
+Two uncertainty mechanics are modeled:
+
+── TRAPS ──
+7 of the 50 contracts are flagged is_trap = true. These represent
+contracts where the nominal client is hostile or the job is a setup.
+
+Detection method: The engine calls detectTrap(contract) at accept-time,
+which reads the is_trap flag directly. In other words, traps are treated
+as fully observable — a perfect information assumption.
+
+When a trap is detected:
+  - The contract is immediately abandoned (not executed).
+  - Reputation is reduced by 1 (minimal cost for avoiding a worst-case outcome).
+  - No gold is lost.
+
+Trap penalty in scoring (−500) acts as a pre-filter: even if a trap
+somehow scored positively, the abandonment cost is priced in.
+
+In practice, all 7 traps were identified and abandoned before execution
+with zero gold lost and only minor reputation deductions.
+
+── COMPLICATIONS ──
+21 of the 50 contracts carry has_complication = true. When executed,
+there is a 20% probability (rollComplication) that the contract takes
+1.5× its listed execution_days instead of the base value (rounded up).
+
+Effect on planning:
+  - Expected execution time for complication-eligible contracts =
+    0.8 × base_days + 0.2 × ceil(1.5 × base_days)
+  - For a 4-day contract: expected = 3.2 + 1.2 = ~4.4 days.
+  - Route scheduling uses the base (optimistic) duration, absorbing
+    deadline slack as a buffer against bad complication rolls.
+
+One complication was observed during the simulation: "The Assassin
+Copycat" (Day 55) triggered, extending execution from 4 to 6 days.
+The contract still completed within its Day 60 deadline due to 5 days
+of built-in slack. Deadline padding is the primary complication mitigation.
+
+
+5. TRADEOFFS CONSIDERED
+───────────────────────────────────────────────────────────────────
+
+GOLD vs. RISK
+  High-gold contracts (Tier 3, 6500–15000) all require nen ≥2, which was
+  never reached in the simulation. Pursuing nen early would have required
+  deprioritizing combat/stealth farming, delaying Tier 2 access and reducing
+  total contracts completed. The current strategy accepts lower peak gold
+  per contract (800–4000) in exchange for consistently completing contracts
+  without failures, maintaining reputation, and maximizing the number of
+  completed jobs within the 200-day window.
+
+  The reputationMultiplier compounds gold across the campaign: at reputation
+  51, the multiplier is ×1.41, meaning every 800-gold contract effectively
+  pays 1128. This makes early reputation farming (even from low-tier jobs)
+  more valuable than its face value suggests.
+
+SPEED vs. SKILL FARMING
+  Accepting 5 contracts per batch maximizes parallelism but creates routing
+  conflicts when contracts are geographically dispersed. A tighter batch
+  (2–3 contracts) would reduce travel waste but slow skill accumulation.
+  The 5-contract batch was retained because the scoring heuristic naturally
+  selects contracts that cluster geographically and expire soonest, limiting
+  route detours in practice.
+
+  Skill farming was prioritized over speed in the early game (Days 1–18)
+  to unlock Tier 2 contracts. After stealth=4 and combat=3 were reached,
+  the focus shifted to gold-per-day maximization (Tier 2 contracts in the
+  3000–4000 gold range).
+
+NEN INVESTMENT
+  Nen is the hardest skill to develop — no starting Tier 1 contracts grant
+  nen rewards (all nen-rewarding contracts require nen ≥1 to accept, a
+  chicken-and-egg problem). A dedicated early investment in a nen-seeding
+  contract would be required to unlock the nen progression tree and eventually
+  access Tier 3 contracts. This was not prioritized in the current run.
+
+BATCH ACCEPTANCE vs. SELECTIVITY
+  Accepting all 5 slots per batch maximizes execution throughput but
+  occasionally includes lower-quality contracts to fill capacity. A more
+  selective approach (accept only top-2 or top-3 contracts) could improve
+  average gold-per-day but would leave execution cycles idle. Given that
+  the simulation ended on Day 61 out of 200 available days, the bottleneck
+  was contract pool exhaustion at current skill levels, not calendar pressure.
+
+═══════════════════════════════════════════════════════════════════

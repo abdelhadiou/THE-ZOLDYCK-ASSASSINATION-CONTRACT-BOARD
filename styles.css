@@ -1,0 +1,75 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #1a1a1a;
+  color: #eee;
+  margin: 0;
+  padding: 0;
+}
+.board-wrapper, .map-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.board-header, .map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #d4af37;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+.header-left { display: flex; align-items: center; gap: 15px; }
+.zoldyck-emblem, .header-emblem { font-size: 2.5em; color: #d4af37; }
+h1 { margin: 0; font-size: 1.5em; }
+.header-tagline, .header-sub { margin: 5px 0 0; color: #aaa; font-size: 0.9em; }
+
+.nav-btn, .ctrl-btn {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+}
+.nav-btn:hover, .ctrl-btn:hover { background: #444; }
+.nav-btn.active, .ctrl-btn.primary { background: #d4af37; color: #000; font-weight: bold; border-color: #d4af37; }
+
+.stats-bar {
+  display: flex;
+  justify-content: space-between;
+  background: #252525;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #333;
+}
+.stat-card { display: flex; align-items: center; gap: 12px; }
+.stat-icon { font-size: 1.8em; }
+.stat-value { font-size: 1.4em; font-weight: bold; color: #d4af37; }
+.stat-label { font-size: 0.85em; color: #888; text-transform: uppercase; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.contracts-toolbar { display: flex; gap: 15px; margin-bottom: 20px; }
+.filter-group label { margin-right: 5px; color: #aaa; }
+.filter-group select, .search-box { padding: 8px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
+.search-box { flex-grow: 1; }
+
+.contracts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 15px;
+}
+.contract-card {
+  background: #252525;
+  border: 1px solid #444;
+  padding: 15px;
+  border-radius: 6px;
+}
+
+.map-container { position: relative; width: 100%; height: 600px; background: #222; border: 1px solid #444; border-radius: 8px; overflow: hidden;}
+#map-canvas { display: block; width: 100%; height: 100%; }
+.map-tooltip { position: absolute; background: rgba(0,0,0,0.85); border: 1px solid #d4af37; padding: 10px; border-radius: 4px; pointer-events: none; z-index: 10; }
+.map-tooltip.hidden { display: none; }

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zoldyck Contract Board — Map Visualization</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="map-page">
+    <header class="map-header">
+      <div class="header-emblem">⚔</div>
+      <h1>Zoldyck Contract Board</h1>
+      <p class="header-sub">Route Visualization & City Graph</p>
+    </header>
+
+    <div class="map-controls">
+      <button id="btn-load-sim" class="ctrl-btn primary">Load Simulation Results</button>
+      <button id="btn-reset" class="ctrl-btn">Reset View</button>
+      <div class="legend">
+        <span class="leg-item"><span class="dot completed"></span>Completed</span>
+        <span class="leg-item"><span class="dot failed"></span>Failed</span>
+        <span class="leg-item"><span class="dot active"></span>Active Route</span>
+        <span class="leg-item"><span class="dot city"></span>City</span>
+      </div>
+    </div>
+
+    <div class="map-container">
+      <canvas id="map-canvas"></canvas>
+      <div id="tooltip" class="map-tooltip hidden"></div>
+    </div>
+
+    <div class="map-sidebar">
+      <div class="sidebar-section" id="city-info-panel">
+        <h3>City Details</h3>
+        <p class="hint">Hover over a city to see details.</p>
+      </div>
+      <div class="sidebar-section" id="route-summary">
+        <h3>Route Summary</h3>
+        <div id="route-list"><p class="hint">Load simulation to view route.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── City layout positions (normalized 0-1 on canvas) ──────────────────────
+    const CITY_POSITIONS = {
+      kukuroo:      { x: 0.25, y: 0.35, label: "Kukuroo Mtn" },
+      yorknew:      { x: 0.45, y: 0.40, label: "Yorknew City" },
+      zaban:        { x: 0.55, y: 0.25, label: "Zaban City" },
+      dolle:        { x: 0.35, y: 0.60, label: "Dolle Harbor" },
+      whale_island: { x: 0.20, y: 0.75, label: "Whale Island" },
+      lingon:       { x: 0.60, y: 0.40, label: "Lingon Airport" },
+      ngl:          { x: 0.70, y: 0.62, label: "NGL" },
+      masadora:     { x: 0.82, y: 0.45, label: "Masadora" },
+      greed_island: { x: 0.88, y: 0.30, label: "Greed Island" },
+    };
+
+    const EDGES = [
+      ["kukuroo",      "yorknew",      2],
+      ["kukuroo",      "zaban",        3],
+      ["kukuroo",      "lingon",       2],
+      ["yorknew",      "zaban",        2],
+      ["yorknew",      "dolle",        3],
+      ["yorknew",      "lingon",       1],
+      ["yorknew",      "ngl",          5],
+      ["zaban",        "dolle",        3],
+      ["zaban",        "lingon",       2],
+      ["dolle",        "whale_island", 2],
+      ["dolle",        "lingon",       3],
+      ["lingon",       "ngl",          4],
+      ["lingon",       "masadora",     8],
+      ["lingon",       "greed_island", 10],
+      ["ngl",          "masadora",     8],
+      ["ngl",          "greed_island", 10],
+      ["masadora",     "greed_island", 2],
+    ];
+
+    const CITY_INFO = {
+      kukuroo:      { full: "Kukuroo Mountain", desc: "Home of the Zoldyck family. Your starting point." },
+      yorknew:      { full: "Yorknew City", desc: "World's largest city. Hub of commerce, crime, and the Phantom Troupe." },
+      zaban:        { full: "Zaban City", desc: "Hunter Exam site. Administrative heart of the Association." },
+      dolle:        { full: "Dolle Harbor", desc: "Major port. Gateway to remote Whale Island." },
+      whale_island: { full: "Whale Island", desc: "Remote island. Gon's homeland. Accessible only via sea." },
+      lingon:       { full: "Lingon Airport", desc: "Major transit hub. Fastest regional connections." },
+      ngl:          { full: "NGL (No Good Language)", desc: "Anti-technology autonomous region. Dangerous territory." },
+      masadora:     { full: "Masadora", desc: "The only city inside Greed Island. Requires Nen to enter." },
+      greed_island: { full: "Greed Island", desc: "Card-based game world. Access restricted to Nen users." },
+    };
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let simState = null;
+    let hoveredCity = null;
+    let activeRoute = [];
+
+    // ── Canvas setup ──────────────────────────────────────────────────────────
+    const canvas = document.getElementById("map-canvas");
+    const ctx = canvas.getContext("2d");
+    const tooltip = document.getElementById("tooltip");
+
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight || 520;
+      draw();
+    }
+
+    function cityPx(cityId) {
+      const pos = CITY_POSITIONS[cityId];
+      return { x: pos.x * canvas.width, y: pos.y * canvas.height };
+    }
+
+    // ── Drawing ───────────────────────────────────────────────────────────────
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      drawEdges();
+      if (activeRoute.length > 1) drawRoute();
+      drawCities();
+    }
+
+    function drawBackground() {
+      const grad = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 0,
+        canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+      );
+      grad.addColorStop(0, "#0e1e14");
+      grad.addColorStop(1, "#050d08");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Grid lines
+      ctx.strokeStyle = "rgba(212,175,55,0.05)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 50) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 50) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+    }
+
+    function drawEdges() {
+      for (const [a, b, days] of EDGES) {
+        const p1 = cityPx(a);
+        const p2 = cityPx(b);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = "rgba(212,175,55,0.15)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Travel time label
+        const mx = (p1.x + p2.x) / 2;
+        const my = (p1.y + p2.y) / 2;
+        ctx.fillStyle = "rgba(212,175,55,0.4)";
+        ctx.font = "10px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(`${days}d`, mx, my);
+      }
+    }
+
+    function drawRoute() {
+      // Draw animated route line
+      ctx.save();
+      ctx.setLineDash([8, 4]);
+      ctx.strokeStyle = "#00ff88";
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "#00ff88";
+      ctx.shadowBlur = 8;
+
+      for (let i = 0; i < activeRoute.length - 1; i++) {
+        const p1 = cityPx(activeRoute[i]);
+        const p2 = cityPx(activeRoute[i + 1]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        // Arrow head
+        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+        const mx = (p1.x + p2.x) / 2;
+        const my = (p1.y + p2.y) / 2;
+        ctx.fillStyle = "#00ff88";
+        ctx.beginPath();
+        ctx.moveTo(mx + Math.cos(angle) * 8, my + Math.sin(angle) * 8);
+        ctx.lineTo(mx + Math.cos(angle + 2.4) * 5, my + Math.sin(angle + 2.4) * 5);
+        ctx.lineTo(mx + Math.cos(angle - 2.4) * 5, my + Math.sin(angle - 2.4) * 5);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    const CITY_NAME_TO_ID = {
+      "Kukuroo Mountain": "kukuroo",
+      "Yorknew City": "yorknew",
+      "Zaban City": "zaban",
+      "Dolle Harbor": "dolle",
+      "Whale Island": "whale_island",
+      "Lingon Airport": "lingon",
+      "NGL": "ngl",
+      "Masadora": "masadora",
+      "Greed Island": "greed_island",
+    };
+
+    function getCityColor(cityId) {
+      if (!simState) return "#d4af37";
+      const completedCities = new Set(
+        simState.completedContracts.map((c) => CITY_NAME_TO_ID[c.city] ?? c.city)
+      );
+      const failedCities = new Set(
+        simState.failedContracts.map((c) => CITY_NAME_TO_ID[c.city] ?? c.city)
+      );
+      if (cityId === "kukuroo") return "#c0c0c0"; // starting city silver
+      if (completedCities.has(cityId)) return "#00cc66";
+      if (failedCities.has(cityId)) return "#cc3333";
+      return "#d4af37";
+    }
+
+    function drawCities() {
+      for (const [id, pos] of Object.entries(CITY_POSITIONS)) {
+        const { x, y } = cityPx(id);
+        const isHovered = hoveredCity === id;
+        const color = getCityColor(id);
+        const radius = isHovered ? 14 : 10;
+
+        // Glow
+        ctx.save();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = isHovered ? 20 : 10;
+
+        // Outer ring
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = color + "55";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // City dot
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+
+        // Label
+        ctx.font = isHovered ? "bold 12px monospace" : "11px monospace";
+        ctx.fillStyle = isHovered ? "#ffffff" : "#d4af37cc";
+        ctx.textAlign = "center";
+        ctx.fillText(pos.label, x, y + radius + 14);
+
+        // Starting city marker
+        if (id === "kukuroo") {
+          ctx.font = "9px monospace";
+          ctx.fillStyle = "#aaaaaa";
+          ctx.fillText("START", x, y - radius - 5);
+        }
+      }
+    }
+
+    // ── Interaction ───────────────────────────────────────────────────────────
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      let found = null;
+      for (const [id] of Object.entries(CITY_POSITIONS)) {
+        const { x, y } = cityPx(id);
+        const dist = Math.hypot(mx - x, my - y);
+        if (dist < 16) { found = id; break; }
+      }
+
+      if (found !== hoveredCity) {
+        hoveredCity = found;
+        draw();
+        if (found) {
+          showTooltip(e.clientX, e.clientY, found);
+          updateCityPanel(found);
+        } else {
+          tooltip.classList.add("hidden");
+        }
+      } else if (found) {
+        tooltip.style.left = (e.clientX + 12) + "px";
+        tooltip.style.top = (e.clientY - 10) + "px";
+      }
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+      hoveredCity = null;
+      tooltip.classList.add("hidden");
+      draw();
+    });
+
+    function showTooltip(cx, cy, cityId) {
+      const info = CITY_INFO[cityId];
+      let contracts = "";
+      if (simState) {
+        const completed = simState.completedContracts.filter(c => c.city === info.full);
+        const failed = simState.failedContracts.filter(c => c.city === info.full);
+        contracts = `<br><span style="color:#00cc66">✅ ${completed.length} completed</span>  <span style="color:#cc3333">❌ ${failed.length} failed</span>`;
+      }
+      tooltip.innerHTML = `<strong>${info.full}</strong><br>${info.desc}${contracts}`;
+      tooltip.style.left = (cx + 12) + "px";
+      tooltip.style.top = (cy - 10) + "px";
+      tooltip.classList.remove("hidden");
+    }
+
+    function updateCityPanel(cityId) {
+      const panel = document.getElementById("city-info-panel");
+      const info = CITY_INFO[cityId];
+      let html = `<h3>${info.full}</h3><p>${info.desc}</p>`;
+      if (simState) {
+        const done = simState.completedContracts.filter(c => c.city === info.full);
+        const fail = simState.failedContracts.filter(c => c.city === info.full);
+        if (done.length) html += `<div class="contract-list completed-list"><strong>Completed:</strong><ul>${done.map(c=>`<li>${c.name} (+${c.gold}g)</li>`).join("")}</ul></div>`;
+        if (fail.length) html += `<div class="contract-list failed-list"><strong>Failed:</strong><ul>${fail.map(c=>`<li>${c.name}</li>`).join("")}</ul></div>`;
+      }
+      panel.innerHTML = html;
+    }
+
+    // ── Load simulation ───────────────────────────────────────────────────────
+    document.getElementById("btn-load-sim").addEventListener("click", async () => {
+      // Try localStorage first (set by dashboard after running optimizer)
+      try {
+        const saved = localStorage.getItem('zoldyk_simState');
+        if (saved) {
+          simState = JSON.parse(saved);
+          buildRouteFromSim();
+          renderRouteSummary();
+          draw();
+          alert(`✅ Loaded from session! ${simState.completedContracts.length} contracts completed. Total gold: ${simState.gold}`);
+          return;
+        }
+      } catch(e) {}
+      // Fallback: try loading output/simulation_state.json (only works with a local server)
+      try {
+        const res = await fetch("output/simulation_state.json");
+        if (!res.ok) throw new Error("Could not load simulation_state.json");
+        simState = await res.json();
+        buildRouteFromSim();
+        renderRouteSummary();
+        draw();
+        alert(`✅ Loaded! ${simState.completedContracts.length} contracts completed. Total gold: ${simState.gold}`);
+      } catch (err) {
+        alert("⚠️  No simulation data found.\nRun the optimizer on the Dashboard first, then come back here and click Load.");
+      }
+    });
+
+    document.getElementById("btn-reset").addEventListener("click", () => {
+      simState = null;
+      activeRoute = [];
+      document.getElementById("route-list").innerHTML = '<p class="hint">Load simulation to view route.</p>';
+      document.getElementById("city-info-panel").innerHTML = '<h3>City Details</h3><p class="hint">Hover over a city to see details.</p>';
+      draw();
+    });
+
+    function buildRouteFromSim() {
+      if (!simState) return;
+      const cityNameMap = {
+        "Kukuroo Mountain": "kukuroo",
+        "Yorknew City": "yorknew",
+        "Zaban City": "zaban",
+        "Dolle Harbor": "dolle",
+        "Whale Island": "whale_island",
+        "Lingon Airport": "lingon",
+        "NGL": "ngl",
+        "Masadora": "masadora",
+        "Greed Island": "greed_island",
+      };
+      const visited = ["kukuroo"];
+      for (const entry of simState.timeline) {
+        const travelMatch = entry.msg.match(/TRAVELING to (.+?) \(/);
+        if (travelMatch) {
+          const cityName = travelMatch[1];
+          const cityId = cityNameMap[cityName];
+          if (cityId && visited[visited.length - 1] !== cityId) {
+            visited.push(cityId);
+          }
+        }
+      }
+      activeRoute = visited;
+    }
+
+    function renderRouteSummary() {
+      if (!simState) return;
+      const list = document.getElementById("route-list");
+      const stops = activeRoute.map(id => CITY_POSITIONS[id]?.label || id);
+      list.innerHTML = `
+        <div class="route-stats">
+          <div class="stat"><span class="stat-val">${simState.gold.toLocaleString()}</span><span class="stat-lbl">Gold</span></div>
+          <div class="stat"><span class="stat-val">${simState.completedContracts.length}</span><span class="stat-lbl">Completed</span></div>
+          <div class="stat"><span class="stat-val">${simState.failedContracts.length}</span><span class="stat-lbl">Failed</span></div>
+          <div class="stat"><span class="stat-val">${simState.reputation}</span><span class="stat-lbl">Reputation</span></div>
+        </div>
+        <div class="route-path">${stops.join(" → ")}</div>
+      `;
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+  </script>
+</body>
+</html>
